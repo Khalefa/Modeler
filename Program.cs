@@ -14,8 +14,10 @@ namespace Modeler
            
             double[,] A = new double[,] { { 1, 1 }, { 1, 3 }, { 1, 4 } };
             double[] B = new double[] { 6, 7, 10 };
-            double[] x = ChebReg. Solve(A, B);
-            double[] C = LinearReg.Solve(A, B);
+            double[] CC = ChebReg. Solve(A, B);
+            double[] CL = LinearReg.Solve(A, B);
+            double[] E1 = Regression.CalcError(A, CC, B);
+            double[] E2 = Regression.CalcError(A, CL, B);
         }
     }
 }

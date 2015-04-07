@@ -9,7 +9,7 @@ namespace Modeler
     class Regression
     {
        
-        public double[] CalcError(double[,] X, double[] W, double[] C, double[] Y)
+       static public double[] CalcError(double[,] X,  double[] C, double[] Y)
         {
             int M = Y.Length;             // M = Number of data points
             int N = X.Length / M;         // N = Number of linear terms
@@ -20,7 +20,7 @@ namespace Modeler
             {
                 Ycalc[k] = 0;
                 for (int i = 0; i < N; i++)
-                    Ycalc[k] = Ycalc[k] + C[i] * X[i, k];
+                    Ycalc[k] = Ycalc[k] + C[i] * X[ k,i];
                 E[k] = Ycalc[k] - Y[k];
 
             }

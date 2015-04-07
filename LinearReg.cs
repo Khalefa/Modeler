@@ -28,17 +28,35 @@ namespace Modeler
                     V[i, j] = 0;
 
             // Form Least Squares Matrix
-            for (int i = 0; i < N; i++)
+            if (W != null)
             {
-                for (int j = 0; j < N; j++)
+                for (int i = 0; i < N; i++)
                 {
-                    V[i, j] = 0;
+                    for (int j = 0; j < N; j++)
+                    {
+                        V[i, j] = 0;
+                        for (int k = 0; k < M; k++)
+                            V[i, j] = V[i, j] + W[k] * X[i, k] * X[j, k];
+                    }
+                    B[i] = 0;
                     for (int k = 0; k < M; k++)
-                        V[i, j] = V[i, j] + W[k] * X[i, k] * X[j, k];
+                        B[i] = B[i] + W[k] * X[i, k] * Y[k];
                 }
-                B[i] = 0;
-                for (int k = 0; k < M; k++)
-                    B[i] = B[i] + W[k] * X[i, k] * Y[k];
+            }
+            else
+            {
+                for (int i = 0; i < N; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        V[i, j] = 0;
+                        for (int k = 0; k < M; k++)
+                            V[i, j] = V[i, j] +  X[i, k] * X[j, k];
+                    }
+                    B[i] = 0;
+                    for (int k = 0; k < M; k++)
+                        B[i] = B[i] +  X[i, k] * Y[k];
+                }
             }
             // V now contains the raw least squares matrix
             if (!SymmetricMatrixInvert(V))
@@ -142,10 +160,8 @@ static         bool SymmetricMatrixInvert(double[,] V)
             for (int i = 0; i < d0; i++)
                 for (int j = 0; j < d1; j++)
                     Xt[j, i] = X[i, j];
-            for (int i = 0; i < d0; i++)
-                W[i] = 1;
-
-            return Regress(Y, Xt, W);
+            
+            return Regress(Y, Xt, null);
 
         }
 
