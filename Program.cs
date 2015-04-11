@@ -4,20 +4,198 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.IO;
 namespace Modeler
 {
-    class Program
+    public class Program
     {
+
+        static double[] readfile(string filename)
+        {
+            List<double> l = new List<double>();
+            StreamReader sr = new StreamReader(filename);
+            while (!sr.EndOfStream)
+            {
+                l.Add(Double.Parse(sr.ReadLine()));
+            }
+            
+            sr.Close();
+            return l.ToArray();
+        }
+        public static double Median( IEnumerable<double> list)
+        {
+            List<double> orderedList = list
+                .OrderBy(numbers => numbers)
+                .ToList();
+ 
+            int listSize = orderedList.Count;
+            double result;
+ 
+            if (listSize%2 == 0) // even
+            {
+                int midIndex = listSize/2;
+                result = ((orderedList.ElementAt(midIndex - 1) +
+                           orderedList.ElementAt(midIndex))/2);
+            }
+            else // odd
+            {
+                double element = (double) listSize/2;
+                element = Math.Round(element, MidpointRounding.AwayFromZero);
+ 
+                result = orderedList.ElementAt((int) (element - 1));
+            }
+ 
+            return result;
+        }
+        // start with mod
+        // L[s,s]=1
+
+      /*  static void writefile(double[] d, string filename)
+        {
+               StreamWriter sw = new StreamWriter(filename);
+            for(int i=0;i<d.Length;i++)
+            {
+                sw.WriteLine(d[i]);
+            }
+            sw.Close();
+            
+        }*/
+        static void writefile(dynamic o, string filename)
+        {
+            StreamWriter sw = new StreamWriter(filename);
+            foreach (var c in o)
+            {
+                sw.WriteLine(c);
+            }
+            sw.Close();
+        }
+        //we may try huffman enconding 
+        // 0 
+        
+
+        static void analysis(double[] d)
+        {
+            //unique values
+            int ucount=d.Select(a =>Math.Abs(a)).Distinct().Count();
+            var x =  from i in d
+                     group i by (int)i into gr
+                     orderby   gr.Count() descending
+                     select(new { Value =gr.Key, Count = gr.Count()})
+                     ;
+            
+            int count =d.Count();
+            Console.WriteLine(ucount + "  "+count+" "+ucount*100.0/count);
+            
+            foreach (var xx in x.Take(10))
+            {
+                Console.WriteLine(xx.Value + " " + xx.Count);
+            }
+
+            var abs_d = d.Select(a => Math.Abs(a));
+            Console.WriteLine("base data "+ (d.Max() - d.Min()) +  " "+Math.Log(d.Max() - d.Min(),2));
+            /*Console.WriteLine("abs data " + (abs_d.Max() - abs_d.Min()) + " " + Math.Log(abs_d.Max() - abs_d.Min()));
+            var diff_d = diff(d);
+             abs_d = diff_d.Select(a => Math.Abs(a));
+            Console.WriteLine("diff data " + (diff_d.Max() - diff_d.Min()) + " " + Math.Log(diff_d.Max() - diff_d.Min()));
+            Console.WriteLine("diff abs data " + (abs_d.Max() - abs_d.Min()) + " " + Math.Log(abs_d.Max() - abs_d.Min()));
+            */
+          //  Console.WriteLine(changeSign(d));
+           // Console.WriteLine(changeSignNotinSequence(d));
+
+
+        }
+        static double[] diff(double []data){
+            double[] a = new double[data.Length - 1];
+            for (int i = 1; i < data.Length; i++)
+            {
+                a[i - 1] = data[i] - data[i - 1];
+            }
+            return a;
+        }
+
+        static int[] sign(double[] data)
+        {
+            var r = from d in data
+                    select Math.Sign(d);
+            return r.ToArray();
+        }
+        static int changesign(double x, double y)
+        {
+            if (x == 0 || y == 0) return 0;
+            if (x > 0 && y > 0) return 0;
+            if (x < 0 && y < 0) return 0;
+            return 1;
+        }
+        static int changeSign(double[] d)
+        {
+            int c = 0;
+            for (int i = 1; i < d.Length; i++)
+                c += changesign(d[i - 1], d[i]);
+            return c;
+        }
+        static int changeSignNotinSequence(double[] d)
+        {
+            int c = 0;
+            for (int i = 1; i < d.Length; i++)
+                c += changesign(d[i - 1], -d[i]);
+            return c;
+        }
+        static void Test()
+        {
+            double[] d = readfile("data.txt");
+            var x = d.Distinct().OrderBy(a => a);
+            var s = diff(x.ToArray());
+            var xx = from i in s
+                     group i by (int)i into gr
+                     orderby gr.Key descending
+                     select (new { Value = gr.Key, Count = gr.Count() });
+
+            writefile(xx, "diffs.txt");
+
+            
+        }
         static void Main(string[] args)
         {
-            ChebReg.Test();
-           
-            double[,] A = new double[,] { { 1, 1 }, { 1, 3 }, { 1, 4 } };
-            double[] B = new double[] { 6, 7, 10 };
-            double[] CC = ChebReg. Solve(A, B);
-            double[] CL = LinearReg.Solve(A, B);
-            double[] E1 = Regression.CalcError(A, CC, B);
-            double[] E2 = Regression.CalcError(A, CL, B);
+            Test();
+        }
+
+        static void old(string[] args)
+        {
+            double []d=readfile("data.txt");
+            
+            var t = from i in d
+                                    group i by (int)i into gr
+                                    orderby gr.Key descending
+                                    select (new { Value = gr.Key, Count = gr.Count() });
+
+            analysis(d);
+           // writefile(t,"freq.txt");
+            var s = d.OrderByDescending(a => a).Distinct().ToArray();
+            double[,] C = Regression.getArr(s.Length);
+          //   d = d.Select(a => Math.Floor(Math.Abs(a))).ToArray();
+            double[] CC = ChebReg. Solve(C, s);
+            double[] CL = LinearReg.Solve(C, s);
+            double[] E1 = Regression.CalcError(C, CC, s);
+            double[] E2 = Regression.CalcError(C, CL, s);
+
+            //E2 = E2.Select(a => Math.Floor(Math.Abs(a))).ToArray();
+            var de1 = E1.Max() - E1.Min();
+            var de2 = E2.Max() - E2.Min();
+            Console.WriteLine(de1 + " " + Math.Log(de1, 2));
+            Console.WriteLine(de2 + " " + Math.Log(de2, 2));
+            var x = from e in E2
+                    orderby e descending
+                    select e;
+            var x1 = x.Take(10);
+            x = from e in E2
+                orderby e ascending
+                select e;
+            var x2 = x.Take(10);
+            
+          //  writefile(diff(d), "diff.txt");
+
+         //   writefile(sign(d), "sign.txt");
+            
         }
     }
 }
