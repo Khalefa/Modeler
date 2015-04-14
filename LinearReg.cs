@@ -148,22 +148,89 @@ namespace Modeler
             }
             return true;
         }
+        static double mean(double []values)
+        {
+            return values.Average();            
+        }
+        static double stddev(double []values)          
+    {
+       double ret = 0;
+       int count = values.Count();
+       if (count  > 1)
+       {
+          //Compute the Average
+          double avg = values.Average();
+
+          //Perform the Sum of (value-avg)^2
+          double sum = values.Sum(d => (d - avg) * (d - avg));
+
+          //Put it all together
+          ret = Math.Sqrt(sum / count);
+       }
+       return ret;
+    }
+
+        static double corellation(double[] x, double[] y)
+        {
+            double[] p = new double[x.Length];
+            double[] x2 = new double[x.Length];
+            double[] y2 = new double[y.Length];
+            for (int i = 0; i < x.Length; i++)
+            {
+                p[i] = x[i] * y[i];
+                x2[i] = x[i] * x[i];
+                y2[i] = y[i] * y[i];
+            }
+            double psum = p.Sum();
+            double x2sum = x2.Sum();
+            double y2sum = y2.Sum();
+            return psum / Math.Sqrt(x2sum * y2sum);
+        }
+
+        static public double[] OptSolve(double[] y)
+        {
+            double[] values = new double[2];
+            
+            double[] x = new double[y.Length];
+            for (int i = 0; i < x.Length; i++)
+            {
+                x[i] = i+1;
+            }
+            double r=corellation(x,y);
+            double b= r*stddev(y)/stddev(x);
+            double a = mean(y) - b * mean(x);
+            values[1] = b;
+            values[0] = a;
+            return values;
+        }
         static public double[] Solve(double[] Y)
         {
-            return Solve(Regression.getArr(Y.Length), Y);
+            return OptSolve(Y);
         }
-        static public double[] CalcError(double []Y)
+/*        static public double[] CalcError(double[] Y)
         {
-            double [,]coff=Regression.getArr(Y.Length);
-            double []p=Solve(coff, Y);
+            double[,] coff = Regression.getArr(Y.Length);
+            double[] p = Solve(coff, Y);
             if (Math.Abs(p[1]) < 0.1) return null;
-            double []E= Regression.CalcError(coff, p, Y);
+            double[] E = Regression.CalcError(coff, p, Y);
             double deltaY = Y.Max() - Y.Min();
             double deltaE = E.Max() - E.Min();
             if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
             return E;
-            
+        }*/
+        static public double[] CalcError(double[] Y)
+        {
+            double[] p = OptSolve(Y);
+            if (Math.Abs(p[1]) < 0.1) return null;
+            double[] E = new double[Y.Length];
+            for (int i = 0; i < E.Length; i++)
+                E[i] = p[0] + p[1] * (i+1) - Y[i];
+            double deltaY = Y.Max() - Y.Min();
+            double deltaE = E.Max() - E.Min();
+            if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
+            return E;
         }
+
         static public double[] Solve(double[,] X, double[] Y)
         {
             int d0 = X.GetLength(0);

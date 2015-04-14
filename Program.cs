@@ -18,48 +18,48 @@ namespace Modeler
             {
                 l.Add(Double.Parse(sr.ReadLine()));
             }
-            
+
             sr.Close();
             return l.ToArray();
         }
-        public static double Median( IEnumerable<double> list)
+        public static double Median(IEnumerable<double> list)
         {
             List<double> orderedList = list
                 .OrderBy(numbers => numbers)
                 .ToList();
- 
+
             int listSize = orderedList.Count;
             double result;
- 
-            if (listSize%2 == 0) // even
+
+            if (listSize % 2 == 0) // even
             {
-                int midIndex = listSize/2;
+                int midIndex = listSize / 2;
                 result = ((orderedList.ElementAt(midIndex - 1) +
-                           orderedList.ElementAt(midIndex))/2);
+                           orderedList.ElementAt(midIndex)) / 2);
             }
             else // odd
             {
-                double element = (double) listSize/2;
+                double element = (double)listSize / 2;
                 element = Math.Round(element, MidpointRounding.AwayFromZero);
- 
-                result = orderedList.ElementAt((int) (element - 1));
+
+                result = orderedList.ElementAt((int)(element - 1));
             }
- 
+
             return result;
         }
         // start with mod
         // L[s,s]=1
 
-      /*  static void writefile(double[] d, string filename)
-        {
-               StreamWriter sw = new StreamWriter(filename);
-            for(int i=0;i<d.Length;i++)
-            {
-                sw.WriteLine(d[i]);
-            }
-            sw.Close();
+        /*  static void writefile(double[] d, string filename)
+          {
+                 StreamWriter sw = new StreamWriter(filename);
+              for(int i=0;i<d.Length;i++)
+              {
+                  sw.WriteLine(d[i]);
+              }
+              sw.Close();
             
-        }*/
+          }*/
         static void writefile(dynamic o, string filename)
         {
             StreamWriter sw = new StreamWriter(filename);
@@ -71,40 +71,41 @@ namespace Modeler
         }
         //we may try huffman enconding 
         // 0 
-        
+
 
         static void analysis(double[] d)
         {
             //unique values
-            int ucount=d.Select(a =>Math.Abs(a)).Distinct().Count();
-            var x =  from i in d
-                     group i by (int)i into gr
-                     orderby   gr.Count() descending
-                     select(new { Value =gr.Key, Count = gr.Count()})
+            int ucount = d.Select(a => Math.Abs(a)).Distinct().Count();
+            var x = from i in d
+                    group i by (int)i into gr
+                    orderby gr.Count() descending
+                    select (new { Value = gr.Key, Count = gr.Count() })
                      ;
-            
-            int count =d.Count();
-            Console.WriteLine(ucount + "  "+count+" "+ucount*100.0/count);
-            
+
+            int count = d.Count();
+            Console.WriteLine(ucount + "  " + count + " " + ucount * 100.0 / count);
+
             foreach (var xx in x.Take(10))
             {
                 Console.WriteLine(xx.Value + " " + xx.Count);
             }
 
             var abs_d = d.Select(a => Math.Abs(a));
-            Console.WriteLine("base data "+ (d.Max() - d.Min()) +  " "+Math.Log(d.Max() - d.Min(),2));
+            Console.WriteLine("base data " + (d.Max() - d.Min()) + " " + Math.Log(d.Max() - d.Min(), 2));
             /*Console.WriteLine("abs data " + (abs_d.Max() - abs_d.Min()) + " " + Math.Log(abs_d.Max() - abs_d.Min()));
             var diff_d = diff(d);
              abs_d = diff_d.Select(a => Math.Abs(a));
             Console.WriteLine("diff data " + (diff_d.Max() - diff_d.Min()) + " " + Math.Log(diff_d.Max() - diff_d.Min()));
             Console.WriteLine("diff abs data " + (abs_d.Max() - abs_d.Min()) + " " + Math.Log(abs_d.Max() - abs_d.Min()));
             */
-          //  Console.WriteLine(changeSign(d));
-           // Console.WriteLine(changeSignNotinSequence(d));
+            //  Console.WriteLine(changeSign(d));
+            // Console.WriteLine(changeSignNotinSequence(d));
 
 
         }
-        static double[] diff(double []data){
+        static double[] diff(double[] data)
+        {
             double[] a = new double[data.Length - 1];
             for (int i = 1; i < data.Length; i++)
             {
@@ -152,37 +153,37 @@ namespace Modeler
         static long getSorage(int[] num, int level)
         {
             if (num.Length == 1) return 1;
-            long []s=new long[5]{long.MaxValue,long.MaxValue,long.MaxValue,long.MaxValue,long.MaxValue};
+            long[] s = new long[5] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue };
 
             //raw storage
-             s[0]=(int)Math.Ceiling( Math.Log(num.Max() - num.Min(), 2)) * num.LongLength;
+            s[0] = (int)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.LongLength;
             //delta from the previous
-            int []d=diff(num);
-             s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * d.LongLength +16;
+            int[] d = diff(num);
+            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * d.LongLength + 16;
             //create regression model
             double[] numd = Array.ConvertAll(num, x => (double)x);
             double[] CL = LinearReg.CalcError(numd);
             if (CL != null)
-                   s[2] = sizeof(double) * 2*8 + getSorage(Array.ConvertAll(CL, x => (int)x),level-1);
+                s[2] = sizeof(double) * 2 * 8 + getSorage(Array.ConvertAll(CL, x => (int)x), level - 1);
 
             //dictorny
             int[] data = num.Distinct().ToArray();
             int[] data_sorted = num.Distinct().OrderBy(a => a).ToArray();
             //
-            long t = num.Length * (long)Math.Ceiling(Math.Log(data.LongLength));
-            if( /*(data.Length < num.Length) && */(level>=1))
+            long t = num.Length * (long)Math.Ceiling(Math.Log(data.LongLength, 2));
+            if (level >= 1)
             {
-                
-                s[3] = getSorage(data,level-1) + t;
-                s[4] = getSorage(data_sorted,level-1) + t;
+                s[3] = getSorage(data, level - 1) + t;
+                s[4] = getSorage(data_sorted, level - 1) + t;
             }
-            int minpos=0;
-            long min=s[minpos];
-            for(int i=0;i<s.Length;i++)
+            int minpos = 0;
+            long min = s[minpos];
+            for (int i = 0; i < s.Length; i++)
             {
-                if(min>s[i]){
-                    min=s[i];
-                    minpos=i;
+                if (min > s[i])
+                {
+                    min = s[i];
+                    minpos = i;
                 }
             }
             //choices.Add(level,minpos);
@@ -192,29 +193,30 @@ namespace Modeler
         {
             double[] d = readfile("data.txt");
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 3; i++)
             {
-             Console.WriteLine(i+" "+   getSorage(Array.ConvertAll(d, x => (int)x), i));
+                Console.WriteLine(i + " " + getSorage(Array.ConvertAll(d, x => (int)x), i));
             }
-        
+
         }
-        static void olff(){
-            double []d=new double[2];
+        static void olff()
+        {
+            double[] d = new double[2];
             var x = d.Distinct().OrderBy(a => a);
-           int bits=(int)Math.Ceiling(Math.Log(x.Max() - x.Min(), 2));
-           //Console.WriteLine( bits);
-           //Console.WriteLine(x.Count());
+            int bits = (int)Math.Ceiling(Math.Log(x.Max() - x.Min(), 2));
+            //Console.WriteLine( bits);
+            //Console.WriteLine(x.Count());
             //we can either use
             //1-dictiory
             //2-delta
-            
-           int bits_s = x.Count() * bits + (int)Math.Ceiling(Math.Log(x.Count(), 2) )* d.Length;
-           if (bits_s < bits * d.Length)
-           {
-               Console.Write("Use dictionary");
-           }
-           bits_s = Math.Min(bits_s, bits * d.Length);
-           Console.WriteLine(bits_s / 8.0 / 1024 / 1024);
+
+            int bits_s = x.Count() * bits + (int)Math.Ceiling(Math.Log(x.Count(), 2)) * d.Length;
+            if (bits_s < bits * d.Length)
+            {
+                Console.Write("Use dictionary");
+            }
+            bits_s = Math.Min(bits_s, bits * d.Length);
+            Console.WriteLine(bits_s / 8.0 / 1024 / 1024);
 
             var s = diff(x.ToArray());
             var xx = from i in s
@@ -224,28 +226,33 @@ namespace Modeler
 
             writefile(xx, "diffs.txt");
 
-            
+
         }
         static void Main(string[] args)
         {
-            Test();
+            t();
+            //Test();
         }
-
+        static void t()
+        {
+            double[] r = new double[]{3, 5, 7, 9,11,13};
+            double []E=LinearReg.CalcError(r);
+        }
         static void old(string[] args)
         {
-            double []d=readfile("data.txt");
-            
+            double[] d = readfile("data.txt");
+
             var t = from i in d
-                                    group i by (int)i into gr
-                                    orderby gr.Key descending
-                                    select (new { Value = gr.Key, Count = gr.Count() });
+                    group i by (int)i into gr
+                    orderby gr.Key descending
+                    select (new { Value = gr.Key, Count = gr.Count() });
 
             analysis(d);
-           // writefile(t,"freq.txt");
+            // writefile(t,"freq.txt");
             var s = d.OrderByDescending(a => a).Distinct().ToArray();
             double[,] C = Regression.getArr(s.Length);
-          //   d = d.Select(a => Math.Floor(Math.Abs(a))).ToArray();
-            double[] CC = ChebReg. Solve(C, s);
+            //   d = d.Select(a => Math.Floor(Math.Abs(a))).ToArray();
+            double[] CC = ChebReg.Solve(C, s);
             double[] CL = LinearReg.Solve(C, s);
             double[] E1 = Regression.CalcError(C, CC, s);
             double[] E2 = Regression.CalcError(C, CL, s);
@@ -263,11 +270,11 @@ namespace Modeler
                 orderby e ascending
                 select e;
             var x2 = x.Take(10);
-            
-          //  writefile(diff(d), "diff.txt");
 
-         //   writefile(sign(d), "sign.txt");
-            
+            //  writefile(diff(d), "diff.txt");
+
+            //   writefile(sign(d), "sign.txt");
+
         }
     }
 }
