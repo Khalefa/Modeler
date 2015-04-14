@@ -148,87 +148,136 @@ namespace Modeler
             }
             return true;
         }
-        static double mean(double []values)
+        static double mean(double n)
         {
-            return values.Average();            
+            return (n + 1) / 2;
         }
-        static double stddev(double []values)          
-    {
-       double ret = 0;
-       int count = values.Count();
-       if (count  > 1)
-       {
-          //Compute the Average
-          double avg = values.Average();
+        static double stddev(double n)
+        {
+            return Math.Sqrt((n + 1) * (n - 1) / 12);
+        }
 
-          //Perform the Sum of (value-avg)^2
-          double sum = values.Sum(d => (d - avg) * (d - avg));
+        static double mean(double[] values)
+        {
+            return values.Average();
+        }
+        static double stddev(IEnumerable<int> values)
+        {
+            double ret = 0;
+            int count = values.Count();
+            if (count > 1)
+            {
+                //Compute the Average
+                double avg = values.Average();
 
-          //Put it all together
-          ret = Math.Sqrt(sum / count);
-       }
-       return ret;
-    }
+                //Perform the Sum of (value-avg)^2
+                double sum = values.Sum(d => (d - avg) * (d - avg));
+
+                //Put it all together
+                ret = Math.Sqrt(sum / count);
+            }
+            return ret;
+        }
+        static double stddev(double[] values)
+        {
+            double ret = 0;
+            int count = values.Count();
+            if (count > 1)
+            {
+                //Compute the Average
+                double avg = values.Average();
+
+                //Perform the Sum of (value-avg)^2
+                double sum = values.Sum(d => (d - avg) * (d - avg));
+
+                //Put it all together
+                ret = Math.Sqrt(sum / count);
+            }
+            return ret;
+        }
 
         static double corellation(double[] x, double[] y)
         {
-            double[] p = new double[x.Length];
-            double[] x2 = new double[x.Length];
-            double[] y2 = new double[y.Length];
+            double xysum = 0;
+            double x2sum = 0;
+            double y2sum = 0;
+
             for (int i = 0; i < x.Length; i++)
             {
-                p[i] = x[i] * y[i];
-                x2[i] = x[i] * x[i];
-                y2[i] = y[i] * y[i];
+                xysum += x[i] * y[i];
+                x2sum += x[i] * x[i];
+                y2sum += y[i] * y[i];
             }
-            double psum = p.Sum();
-            double x2sum = x2.Sum();
-            double y2sum = y2.Sum();
-            return psum / Math.Sqrt(x2sum * y2sum);
+            return xysum / Math.Sqrt(x2sum * y2sum);
         }
-
-        static public double[] OptSolve(double[] y)
+        static double corellation(int n, IEnumerable<int> y)
+        {
+            double xysum = 0;
+            double x2sum = 0;
+            double y2sum = 0;
+            IEnumerator<int> l = y.GetEnumerator();
+            l.MoveNext();
+            for (int i = 0; i < n; i++)
+            {
+                double yy = l.Current;
+                xysum += (i + 1) * yy;
+                x2sum += (i + 1) * (i + 1);
+                y2sum += yy * yy;
+            }
+            return xysum / Math.Sqrt(x2sum * y2sum);
+        }
+        static public double[] OptSolve(IEnumerable<int> y)
         {
             double[] values = new double[2];
-            
-            double[] x = new double[y.Length];
-            for (int i = 0; i < x.Length; i++)
-            {
-                x[i] = i+1;
-            }
-            double r=corellation(x,y);
-            double b= r*stddev(y)/stddev(x);
-            double a = mean(y) - b * mean(x);
+
+            int x = y.Count();
+            double r = corellation(x, y);
+            double b = r * stddev(y) / stddev(x);
+            double a = y.Average() - b * mean(x);
             values[1] = b;
             values[0] = a;
             return values;
         }
-        static public double[] Solve(double[] Y)
-        {
-            return OptSolve(Y);
-        }
-/*        static public double[] CalcError(double[] Y)
-        {
-            double[,] coff = Regression.getArr(Y.Length);
-            double[] p = Solve(coff, Y);
-            if (Math.Abs(p[1]) < 0.1) return null;
-            double[] E = Regression.CalcError(coff, p, Y);
-            double deltaY = Y.Max() - Y.Min();
-            double deltaE = E.Max() - E.Min();
-            if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
-            return E;
-        }*/
-        static public double[] CalcError(double[] Y)
+        /*        static public double[] CalcError(double[] Y)
+                {
+                    double[,] coff = Regression.getArr(Y.Length);
+                    double[] p = Solve(coff, Y);
+                    if (Math.Abs(p[1]) < 0.1) return null;
+                    double[] E = Regression.CalcError(coff, p, Y);
+                    double deltaY = Y.Max() - Y.Min();
+                    double deltaE = E.Max() - E.Min();
+                    if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
+                    return E;
+                }*/
+        static public IEnumerable<int> CalcError(IEnumerable<int> Y)
         {
             double[] p = OptSolve(Y);
-            if (Math.Abs(p[1]) < 0.1) return null;
-            double[] E = new double[Y.Length];
-            for (int i = 0; i < E.Length; i++)
-                E[i] = p[0] + p[1] * (i+1) - Y[i];
+            if (Math.Abs(p[1]) < 0.1) yield break;
+            //double[] E = new double[Y.Count()];
+            double maxE = double.MinValue;
+            double minE = double.MaxValue;
+            //for (int i = 0; i < E.Length; i++)
+            //IEnumerator<int> Y_itr = Y.GetEnumerator();
+            //Y_itr.MoveNext();
+            int[] Y_arr = Y.ToArray();
+            for (int i = 0; i < Y_arr.Count(); i++)
+            {
+                double e = p[0] + p[1] * (i + 1) - Y_arr[i];
+                if (e > maxE) maxE = e;
+                if (e < minE) minE = e;
+                //Y_itr.MoveNext();
+            }
             double deltaY = Y.Max() - Y.Min();
-            double deltaE = E.Max() - E.Min();
-            if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
-            return E;
+            double deltaE = maxE - minE;
+            if (Math.Abs(deltaE) > Math.Abs(deltaY)) yield break;
+            //Y_itr.Reset();
+           // Y_itr.MoveNext();
+            for (int i = 0; i < Y_arr.Count(); i++)
+            {
+                int e = (int)(p[0] + p[1] * (i + 1) - Y_arr[i]);
+                yield return e;
+            }
+
         }
 
         static public double[] Solve(double[,] X, double[] Y)
@@ -237,15 +286,12 @@ namespace Modeler
             int d1 = X.GetLength(1);
 
             double[,] Xt = new double[X.GetLength(1), X.GetLength(0)];
-
             double[] W = new double[Y.Length];
             for (int i = 0; i < d0; i++)
                 for (int j = 0; j < d1; j++)
                     Xt[j, i] = X[i, j];
 
             return Regress(Y, Xt, null);
-
         }
-
     }
 }

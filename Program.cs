@@ -9,7 +9,6 @@ namespace Modeler
 {
     public class Program
     {
-
         static double[] readfile(string filename)
         {
             List<double> l = new List<double>();
@@ -104,22 +103,38 @@ namespace Modeler
 
 
         }
-        static double[] diff(double[] data)
+        /*static IEnumerable<double> diff(IEnumerable<double> data)
         {
-            double[] a = new double[data.Length - 1];
-            for (int i = 1; i < data.Length; i++)
+            //List<double> a = new List<double>(data.Count());
+            double x = data.First();
+            foreach (double y in data)
             {
-                a[i - 1] = data[i] - data[i - 1];
+                yield return y - x;
+                x = y;
             }
-            return a;
-        }
-        static int[] diff(int[] data)
+            
+        }*/
+        //get the max and min
+        static int[] diff(IEnumerable<int> data)
         {
-            int[] a = new int[data.Length - 1];
-            for (int i = 1; i < data.Length; i++)
+            int[] a = new int[2];//data.Length - 1];
+                IEnumerator < int > l = data.GetEnumerator();
+                //l.Reset();
+                l.MoveNext();
+                int x = l.Current;
+                int y;
+                int max = x;
+                int min = x;
+            
+            while (l.MoveNext())
             {
-                a[i - 1] = data[i] - data[i - 1];
+                y = l.Current - x;
+                if (y > max) max = y;
+                if (y < min) min = y;
+                x = l.Current;
             }
+            a[0] = max;
+            a[1] = min;
             return a;
         }
         static int[] sign(double[] data)
@@ -150,31 +165,33 @@ namespace Modeler
             return c;
         }
         static Dictionary<int, int> choices = new Dictionary<int, int>();
-        static long getSorage(int[] num, int level)
-        {
-            if (num.Length == 1) return 1;
+        static long getSorage(IEnumerable<int> num, int level)
+        {            
+            if (num.Count() == 1) return 1;
             long[] s = new long[5] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue };
 
             //raw storage
-            s[0] = (int)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.LongLength;
+            int delta = num.Max();
+            delta -= num.Min();
+            s[0] = (int)Math.Ceiling(Math.Log(delta, 2)) * num.Count();
             //delta from the previous
             int[] d = diff(num);
-            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * d.LongLength + 16;
+            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count()-1) + 16;
             //create regression model
-            double[] numd = Array.ConvertAll(num, x => (double)x);
-            double[] CL = LinearReg.CalcError(numd);
-            if (CL != null)
-                s[2] = sizeof(double) * 2 * 8 + getSorage(Array.ConvertAll(CL, x => (int)x), level - 1);
+           // double[] numd = Array.ConvertAll(num, x => (double)x);
+            IEnumerable<int> CL = LinearReg.CalcError(num);
+            
+            if (CL.Count() !=0)
+                s[2] = sizeof(double) * 2 * 8 + getSorage(CL, level - 1);
 
             //dictorny
-            int[] data = num.Distinct().ToArray();
-            int[] data_sorted = num.Distinct().OrderBy(a => a).ToArray();
-            //
-            long t = num.Length * (long)Math.Ceiling(Math.Log(data.LongLength, 2));
+            IEnumerable<int> data = num.Distinct();
+            long t = num.Count() * (long)Math.Ceiling(Math.Log(data.Count(), 2));
             if (level >= 1)
             {
                 s[3] = getSorage(data, level - 1) + t;
-                s[4] = getSorage(data_sorted, level - 1) + t;
+                data = data.OrderBy(a => a);
+                s[4] = getSorage(data, level - 1) + t;
             }
             int minpos = 0;
             long min = s[minpos];
@@ -192,6 +209,8 @@ namespace Modeler
         static void Test()
         {
             double[] d = readfile("data.txt");
+            
+            //"            c:/data/b_s.txt");
 
             for (int i = 0; i < 3; i++)
             {
@@ -199,7 +218,7 @@ namespace Modeler
             }
 
         }
-        static void olff()
+        /*static void olff()
         {
             double[] d = new double[2];
             var x = d.Distinct().OrderBy(a => a);
@@ -227,16 +246,16 @@ namespace Modeler
             writefile(xx, "diffs.txt");
 
 
-        }
+        }*/
         static void Main(string[] args)
         {
-            t();
-            //Test();
+           //t();
+           Test();
         }
         static void t()
         {
-            double[] r = new double[]{3, 5, 7, 9,11,13};
-            double []E=LinearReg.CalcError(r);
+            int[] r = new int[]{3, 5, 7, 9,11,13};
+            var E=LinearReg.CalcError(r);
         }
         static void old(string[] args)
         {
