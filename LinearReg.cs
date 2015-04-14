@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+using System.Linq;
 namespace Modeler
 {
-     class LinearReg:Regression
+    class LinearReg : Regression
     {
 
         static public double[] Regress(double[] Y, double[,] X, double[] W)
@@ -51,11 +51,11 @@ namespace Modeler
                     {
                         V[i, j] = 0;
                         for (int k = 0; k < M; k++)
-                            V[i, j] = V[i, j] +  X[i, k] * X[j, k];
+                            V[i, j] = V[i, j] + X[i, k] * X[j, k];
                     }
                     B[i] = 0;
                     for (int k = 0; k < M; k++)
-                        B[i] = B[i] +  X[i, k] * Y[k];
+                        B[i] = B[i] + X[i, k] * Y[k];
                 }
             }
             // V now contains the raw least squares matrix
@@ -75,8 +75,8 @@ namespace Modeler
             return C;
         }
         //Y is actual
-        
-static         bool SymmetricMatrixInvert(double[,] V)
+
+        static bool SymmetricMatrixInvert(double[,] V)
         {
             int N = (int)Math.Sqrt(V.Length);
             double[] t = new double[N];
@@ -148,7 +148,22 @@ static         bool SymmetricMatrixInvert(double[,] V)
             }
             return true;
         }
-             
+        static public double[] Solve(double[] Y)
+        {
+            return Solve(Regression.getArr(Y.Length), Y);
+        }
+        static public double[] CalcError(double []Y)
+        {
+            double [,]coff=Regression.getArr(Y.Length);
+            double []p=Solve(coff, Y);
+            if (Math.Abs(p[1]) < 0.1) return null;
+            double []E= Regression.CalcError(coff, p, Y);
+            double deltaY = Y.Max() - Y.Min();
+            double deltaE = E.Max() - E.Min();
+            if (Math.Abs(deltaE) > Math.Abs(deltaY)) return null;
+            return E;
+            
+        }
         static public double[] Solve(double[,] X, double[] Y)
         {
             int d0 = X.GetLength(0);
@@ -160,7 +175,7 @@ static         bool SymmetricMatrixInvert(double[,] V)
             for (int i = 0; i < d0; i++)
                 for (int j = 0; j < d1; j++)
                     Xt[j, i] = X[i, j];
-            
+
             return Regress(Y, Xt, null);
 
         }

@@ -112,7 +112,15 @@ namespace Modeler
             }
             return a;
         }
-
+        static int[] diff(int[] data)
+        {
+            int[] a = new int[data.Length - 1];
+            for (int i = 1; i < data.Length; i++)
+            {
+                a[i - 1] = data[i] - data[i - 1];
+            }
+            return a;
+        }
         static int[] sign(double[] data)
         {
             var r = from d in data
@@ -140,14 +148,78 @@ namespace Modeler
                 c += changesign(d[i - 1], -d[i]);
             return c;
         }
+        static Dictionary<int, int> choices = new Dictionary<int, int>();
+        static long getSorage(int[] num, int level)
+        {
+            if (num.Length == 1) return 1;
+            long []s=new long[5]{long.MaxValue,long.MaxValue,long.MaxValue,long.MaxValue,long.MaxValue};
+
+            //raw storage
+             s[0]=(int)Math.Ceiling( Math.Log(num.Max() - num.Min(), 2)) * num.LongLength;
+            //delta from the previous
+            int []d=diff(num);
+             s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * d.LongLength +16;
+            //create regression model
+            double[] numd = Array.ConvertAll(num, x => (double)x);
+            double[] CL = LinearReg.CalcError(numd);
+            if (CL != null)
+                   s[2] = sizeof(double) * 2*8 + getSorage(Array.ConvertAll(CL, x => (int)x),level-1);
+
+            //dictorny
+            int[] data = num.Distinct().ToArray();
+            int[] data_sorted = num.Distinct().OrderBy(a => a).ToArray();
+            //
+            long t = num.Length * (long)Math.Ceiling(Math.Log(data.LongLength));
+            if( (data.Length < num.Length) && (level>=0))
+            {
+                
+                s[3] = getSorage(data,level-1) + t;
+                s[4] = getSorage(data_sorted,level-1) + t;
+            }
+            int minpos=0;
+            long min=s[minpos];
+            for(int i=0;i<s.Length;i++)
+            {
+                if(min>s[i]){
+                    min=s[i];
+                    minpos=i;
+                }
+            }
+            //choices.Add(level,minpos);
+            return min;
+        }
         static void Test()
         {
             double[] d = readfile("data.txt");
+
+            for (int i = 0; i < 10; i++)
+            {
+             Console.WriteLine(i+" "+   getSorage(Array.ConvertAll(d, x => (int)x), i));
+            }
+        
+        }
+        static void olff(){
+            double []d=new double[2];
             var x = d.Distinct().OrderBy(a => a);
+           int bits=(int)Math.Ceiling(Math.Log(x.Max() - x.Min(), 2));
+           //Console.WriteLine( bits);
+           //Console.WriteLine(x.Count());
+            //we can either use
+            //1-dictiory
+            //2-delta
+            
+           int bits_s = x.Count() * bits + (int)Math.Ceiling(Math.Log(x.Count(), 2) )* d.Length;
+           if (bits_s < bits * d.Length)
+           {
+               Console.Write("Use dictionary");
+           }
+           bits_s = Math.Min(bits_s, bits * d.Length);
+           Console.WriteLine(bits_s / 8.0 / 1024 / 1024);
+
             var s = diff(x.ToArray());
             var xx = from i in s
                      group i by (int)i into gr
-                     orderby gr.Key descending
+                     orderby gr.Count() descending
                      select (new { Value = gr.Key, Count = gr.Count() });
 
             writefile(xx, "diffs.txt");
