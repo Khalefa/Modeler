@@ -170,7 +170,7 @@ namespace Modeler
             int[] data_sorted = num.Distinct().OrderBy(a => a).ToArray();
             //
             long t = num.Length * (long)Math.Ceiling(Math.Log(data.LongLength));
-            if( (data.Length < num.Length) && (level>=0))
+            if( /*(data.Length < num.Length) && */(level>=1))
             {
                 
                 s[3] = getSorage(data,level-1) + t;
