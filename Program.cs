@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -103,7 +104,7 @@ namespace Modeler
 
 
         }
-        /*static IEnumerable<double> diff(IEnumerable<double> data)
+        static IEnumerable<double> diff_all(IEnumerable<double> data)
         {
             //List<double> a = new List<double>(data.Count());
             double x = data.First();
@@ -112,20 +113,20 @@ namespace Modeler
                 yield return y - x;
                 x = y;
             }
-            
-        }*/
+
+        }
         //get the max and min
         static int[] diff(IEnumerable<int> data)
         {
             int[] a = new int[2];//data.Length - 1];
-                IEnumerator < int > l = data.GetEnumerator();
-                //l.Reset();
-                l.MoveNext();
-                int x = l.Current;
-                int y;
-                int max = x;
-                int min = x;
-            
+            IEnumerator<int> l = data.GetEnumerator();
+            //l.Reset();
+            l.MoveNext();
+            int x = l.Current;
+            int y;
+            int max = int.MinValue;
+            int min = int.MaxValue;
+
             while (l.MoveNext())
             {
                 y = l.Current - x;
@@ -164,35 +165,36 @@ namespace Modeler
                 c += changesign(d[i - 1], -d[i]);
             return c;
         }
-        static Dictionary<int, int> choices = new Dictionary<int, int>();
-        static long getSorage(IEnumerable<int> num, int level)
-        {            
+
+        static long getSorage(IEnumerable<int> num, ArrayList choics, int level)
+        {
+            ArrayList l3 = new ArrayList();
+            ArrayList l4 = new ArrayList();
+
             if (num.Count() == 1) return 1;
             long[] s = new long[5] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue };
 
             //raw storage
-            int delta = num.Max();
-            delta -= num.Min();
-            s[0] = (int)Math.Ceiling(Math.Log(delta, 2)) * num.Count();
-            //delta from the previous
+            s[0] = (int)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.Count();
+            //delta
             int[] d = diff(num);
-            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count()-1) + 16;
+            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + 16;
             //create regression model
-           // double[] numd = Array.ConvertAll(num, x => (double)x);
             IEnumerable<int> CL = LinearReg.CalcError(num);
-            
-            if (CL.Count() !=0)
-                s[2] = sizeof(double) * 2 * 8 + getSorage(CL, level - 1);
 
-            //dictorny
+            if (CL.Count() != 0)
+                s[2] = sizeof(double) * 2 * 8 + getSorage(CL, choics, level - 1);
+
+            //dictionary
             IEnumerable<int> data = num.Distinct();
             long t = num.Count() * (long)Math.Ceiling(Math.Log(data.Count(), 2));
             if (level >= 1)
             {
-                s[3] = getSorage(data, level - 1) + t;
+                s[3] = getSorage(data, l3, level - 1) + t;
                 data = data.OrderBy(a => a);
-                s[4] = getSorage(data, level - 1) + t;
+                s[4] = getSorage(data, l4, level - 1) + t;
             }
+
             int minpos = 0;
             long min = s[minpos];
             for (int i = 0; i < s.Length; i++)
@@ -203,18 +205,23 @@ namespace Modeler
                     minpos = i;
                 }
             }
-            //choices.Add(level,minpos);
+            if (minpos == 3)
+                choics.AddRange(l3);
+            if (minpos == 4) choics.AddRange(l4);
+            choics.Add(minpos);
             return min;
         }
         static void Test()
         {
             double[] d = readfile("data.txt");
-            
-            //"            c:/data/b_s.txt");
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 1; i < 3; i++)
             {
-                Console.WriteLine(i + " " + getSorage(Array.ConvertAll(d, x => (int)x), i));
+                ArrayList choics = new ArrayList();
+
+                Console.WriteLine(i + " " + getSorage(Array.ConvertAll(d, x => (int)x), choics, i));
+                foreach (int x in choics) { Console.Write(x + ":"); }
+                Console.WriteLine();
             }
 
         }
@@ -249,13 +256,13 @@ namespace Modeler
         }*/
         static void Main(string[] args)
         {
-           //t();
-           Test();
+            //t();
+            Test();
         }
         static void t()
         {
-            int[] r = new int[]{3, 5, 7, 9,11,13};
-            var E=LinearReg.CalcError(r);
+            int[] r = new int[] { 3, 5, 7, 9, 11, 13 };
+            var E = LinearReg.CalcError(r);
         }
         static void old(string[] args)
         {
