@@ -4,16 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections;
+using Priority_Queue;
 namespace Modeler
 {
-    public class Node
+    public class Node:PriorityQueueNode
     {
-        public char Symbol { get; set; }
+        public string Symbol { get; set; }
         public int Frequency { get; set; }
         public Node Right { get; set; }
         public Node Left { get; set; }
 
-        public List<bool> Traverse(char symbol, List<bool> data)
+        public List<bool> Traverse(string symbol, List<bool> data)
         {
             // Leaf
             if (Right == null && Left == null)
@@ -59,60 +60,73 @@ namespace Modeler
                 }
             }
         }
+        public long TotalFrequency()
+        {
+            if (Right == null) return Frequency;
+            else return Frequency + Right.TotalFrequency() + Left.TotalFrequency();
+                
+        }
     }
     public class HuffmanTree
     {
-        private List<Node> nodes = new List<Node>();
+        //private List<Node> nodes = new List<Node>();
+        private HeapPriorityQueue<Node> nodes =null;
         public Node Root { get; set; }
-        public Dictionary<char, int> Frequencies = new Dictionary<char, int>();
+        public Dictionary<string, int> Frequencies = new Dictionary<string, int>();
 
-        public void Build(string source)
+        public long Size()
         {
-            for (int i = 0; i < source.Length; i++)
-            {
-                if (!Frequencies.ContainsKey(source[i]))
-                {
-                    Frequencies.Add(source[i], 0);
-                }
+            int size = 0;
+          //  List<Node> ls = new List<Node>();
 
-                Frequencies[source[i]]++;
+            foreach (string x in Frequencies.Keys)
+            {
+                List<bool> l = Root.Traverse(x, new List<bool>());
+                size += l.Count() * Frequencies[x];
+
             }
 
-            foreach (KeyValuePair<char, int> symbol in Frequencies)
+            return Root.TotalFrequency();
+        }
+        public void Build()
+        {
+
+            nodes=new HeapPriorityQueue<Node>(Frequencies.Count);
+            foreach (KeyValuePair<string, int> symbol in Frequencies)
             {
-                nodes.Add(new Node() { Symbol = symbol.Key, Frequency = symbol.Value });
+                nodes.Enqueue(new Node() { Symbol = symbol.Key, Frequency = symbol.Value },symbol.Value);
+                    
+                    //.Add(new Node() );
             }
 
             while (nodes.Count > 1)
             {
-                List<Node> orderedNodes = nodes.OrderBy(node => node.Frequency).ToList<Node>();
+               // List<Node> orderedNodes = nodes.OrderBy(node => node.Frequency).ToList<Node>();
 
-                if (orderedNodes.Count >= 2)
+                if (nodes.Count >= 2)
                 {
                     // Take first two items
-                    List<Node> taken = orderedNodes.Take(2).ToList<Node>();
-
+                 //   List<Node> taken = orderedNodes.Take(2).ToList<Node>();
+                    Node a = nodes.Dequeue();
+                    Node  b= nodes.Dequeue();
                     // Create a parent node by combining the frequencies
                     Node parent = new Node()
                     {
-                        Symbol = '*',
-                        Frequency = taken[0].Frequency + taken[1].Frequency,
-                        Left = taken[0],
-                        Right = taken[1]
+                        Symbol = "*",
+                        Frequency = a.Frequency + b.Frequency,
+                        Left = a,
+                        Right = b
                     };
 
-                    nodes.Remove(taken[0]);
-                    nodes.Remove(taken[1]);
-                    nodes.Add(parent);
+                    nodes.Enqueue(parent,parent.Frequency);
                 }
 
-                this.Root = nodes.FirstOrDefault();
-
             }
+            this.Root = nodes.Dequeue();
 
         }
 
-        public BitArray Encode(string source)
+        public BitArray Encode(string[] source)
         {
             List<bool> encodedSource = new List<bool>();
 

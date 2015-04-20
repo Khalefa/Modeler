@@ -270,8 +270,6 @@ namespace Modeler
             double deltaY = Y.Max() - Y.Min();
             double deltaE = maxE - minE;
             if (Math.Abs(deltaE) > Math.Abs(deltaY)) yield break;
-            //Y_itr.Reset();
-           // Y_itr.MoveNext();
             for (int i = 0; i < Y_arr.Count(); i++)
             {
                 int e = (int)(p[0] + p[1] * (i + 1) - Y_arr[i]);

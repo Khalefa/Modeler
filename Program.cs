@@ -104,11 +104,10 @@ namespace Modeler
 
 
         }
-        static IEnumerable<double> diff_all(IEnumerable<double> data)
+        static IEnumerable<int> diff_all(IEnumerable<int> data)
         {
-            //List<double> a = new List<double>(data.Count());
-            double x = data.First();
-            foreach (double y in data)
+            int x = data.First();
+            foreach (int y in data)
             {
                 yield return y - x;
                 x = y;
@@ -165,20 +164,35 @@ namespace Modeler
                 c += changesign(d[i - 1], -d[i]);
             return c;
         }
+        static long huffman(IEnumerable<int> num)
+        {
+            HuffmanTree h = new HuffmanTree();
 
+            h.Frequencies = new Dictionary<string, int>();
+            foreach (int x in num)
+            {
+                if (h.Frequencies.ContainsKey(x.ToString()))
+                    h.Frequencies[x.ToString()]++;
+                else
+                    h.Frequencies.Add(x.ToString(), 1);
+            }
+            h.Build();
+            return h.Size()-h.Root.Frequency;
+        }
         static long getSorage(IEnumerable<int> num, ArrayList choics, int level)
         {
             ArrayList l3 = new ArrayList();
             ArrayList l4 = new ArrayList();
 
             if (num.Count() == 1) return 1;
-            long[] s = new long[5] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue };
+            long[] s = new long[] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue ,long.MaxValue};
 
             //raw storage
-            s[0] = (int)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.Count();
+            s[0] = (long)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.Count();
             //delta
             int[] d = diff(num);
-            s[1] = (int)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + 16;
+            int[] dd = diff_all(num).ToArray();
+            s[1] = (long)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + (long)Math.Ceiling(Math.Log(Math.Abs( d.Min()),2));
             //create regression model
             IEnumerable<int> CL = LinearReg.CalcError(num);
 
@@ -194,6 +208,8 @@ namespace Modeler
                 data = data.OrderBy(a => a);
                 s[4] = getSorage(data, l4, level - 1) + t;
             }
+
+            s[5] = huffman(num);
 
             int minpos = 0;
             long min = s[minpos];
@@ -223,6 +239,27 @@ namespace Modeler
                 foreach (int x in choics) { Console.Write(x + ":"); }
                 Console.WriteLine();
             }
+
+        }
+
+        static void TestHuffman()
+        {
+            long t = huffman(new int[] { 1, 1, 1, 1,1,1,1,
+                                2,2,2,2,            3 ,3,3,3,
+            4,4,4,            5,5,
+            6,6,
+            7,7,
+            8,8,
+            9,9,
+            10,10,
+            11,
+            12,
+            13,
+            14,15,16}
+               
+
+        );
+
 
         }
         /*static void olff()
@@ -258,6 +295,7 @@ namespace Modeler
         {
             //t();
             Test();
+            //TestHuffman();
         }
         static void t()
         {

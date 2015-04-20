@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChebReg.cs" />
+    <Compile Include="heap.cs" />
     <Compile Include="huffman.cs" />
     <Compile Include="LinearReg.cs" />
     <Compile Include="Program.cs" />
