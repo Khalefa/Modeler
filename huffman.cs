@@ -79,12 +79,12 @@ namespace Modeler
             int size = 0;
           //  List<Node> ls = new List<Node>();
 
-            foreach (string x in Frequencies.Keys)
-            {
-                List<bool> l = Root.Traverse(x, new List<bool>());
-                size += l.Count() * Frequencies[x];
+            //foreach (string x in Frequencies.Keys)
+            //{
+            //    List<bool> l = Root.Traverse(x, new List<bool>());
+            //    size += l.Count() * Frequencies[x];
 
-            }
+            //}
 
             return Root.TotalFrequency();
         }
@@ -94,9 +94,8 @@ namespace Modeler
             nodes=new HeapPriorityQueue<Node>(Frequencies.Count);
             foreach (KeyValuePair<string, int> symbol in Frequencies)
             {
-                nodes.Enqueue(new Node() { Symbol = symbol.Key, Frequency = symbol.Value },symbol.Value);
+                nodes.Enqueue(new Node() { Symbol = symbol.Key, Frequency = symbol.Value },symbol.Value);                   
                     
-                    //.Add(new Node() );
             }
 
             while (nodes.Count > 1)
@@ -179,7 +178,5 @@ namespace Modeler
         }
 
     }
-    class huffman
-    {
-    }
+    
 }

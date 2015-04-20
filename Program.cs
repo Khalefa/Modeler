@@ -177,7 +177,16 @@ namespace Modeler
                     h.Frequencies.Add(x.ToString(), 1);
             }
             h.Build();
-            return h.Size()-h.Root.Frequency;
+            long s= h.Size()-h.Root.Frequency;
+            //estimate the direcoty size
+            
+            long dir=getSorage(num.Distinct(),null
+                ,0);
+                
+                //(h.Frequencies.Count()*(int)Math.Ceiling(Math.Log(num.Max()-num.Min(),2)));
+
+            return s+dir;
+
         }
         static long getSorage(IEnumerable<int> num, ArrayList choics, int level)
         {
@@ -191,7 +200,7 @@ namespace Modeler
             s[0] = (long)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.Count();
             //delta
             int[] d = diff(num);
-            int[] dd = diff_all(num).ToArray();
+           // int[] dd = diff_all(num).ToArray();
             s[1] = (long)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + (long)Math.Ceiling(Math.Log(Math.Abs( d.Min()),2));
             //create regression model
             IEnumerable<int> CL = LinearReg.CalcError(num);
@@ -208,7 +217,7 @@ namespace Modeler
                 data = data.OrderBy(a => a);
                 s[4] = getSorage(data, l4, level - 1) + t;
             }
-
+            if(choics!=null)
             s[5] = huffman(num);
 
             int minpos = 0;
@@ -221,21 +230,26 @@ namespace Modeler
                     minpos = i;
                 }
             }
-            if (minpos == 3)
-                choics.AddRange(l3);
-            if (minpos == 4) choics.AddRange(l4);
-            choics.Add(minpos);
+            if (choics != null)
+            {
+                if (minpos == 3)
+                    choics.AddRange(l3);
+                if (minpos == 4) choics.AddRange(l4);
+
+                choics.Add(minpos);
+            }
             return min;
         }
         static void Test()
         {
             double[] d = readfile("data.txt");
 
-            for (int i = 1; i < 3; i++)
+            for (int i = 1; i < 5; i++)
             {
                 ArrayList choics = new ArrayList();
 
-                Console.WriteLine(i + " " + getSorage(Array.ConvertAll(d, x => (int)x), choics, i));
+                long size=getSorage(Array.ConvertAll(d, x => (int)x/1), choics, i);
+                Console.WriteLine(i + " " + size+ " "+size*1.0/d.Count());
                 foreach (int x in choics) { Console.Write(x + ":"); }
                 Console.WriteLine();
             }
