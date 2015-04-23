@@ -90,17 +90,15 @@ namespace Modeler
         }
         public void Build()
         {
-
             nodes=new HeapPriorityQueue<Node>(Frequencies.Count);
             foreach (KeyValuePair<string, int> symbol in Frequencies)
             {
                 nodes.Enqueue(new Node() { Symbol = symbol.Key, Frequency = symbol.Value },symbol.Value);                   
-                    
             }
 
             while (nodes.Count > 1)
             {
-               // List<Node> orderedNodes = nodes.OrderBy(node => node.Frequency).ToList<Node>();
+             
 
                 if (nodes.Count >= 2)
                 {

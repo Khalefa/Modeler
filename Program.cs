@@ -177,15 +177,15 @@ namespace Modeler
                     h.Frequencies.Add(x.ToString(), 1);
             }
             h.Build();
-            long s= h.Size()-h.Root.Frequency;
+            long s = h.Size() - h.Root.Frequency;
             //estimate the direcoty size
-            
-            long dir=getSorage(num.Distinct(),null
-                ,0);
-                
-                //(h.Frequencies.Count()*(int)Math.Ceiling(Math.Log(num.Max()-num.Min(),2)));
 
-            return s+dir;
+            long dir = getSorage(num.Distinct(), null
+                , 0);
+
+            //(h.Frequencies.Count()*(int)Math.Ceiling(Math.Log(num.Max()-num.Min(),2)));
+            Console.WriteLine("huffman"+num.Count()+"\tdir\t" + dir + "\tsize" + s);
+            return s + dir;
 
         }
         static long getSorage(IEnumerable<int> num, ArrayList choics, int level)
@@ -194,14 +194,15 @@ namespace Modeler
             ArrayList l4 = new ArrayList();
 
             if (num.Count() == 1) return 1;
-            long[] s = new long[] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue ,long.MaxValue};
+            long[] s = new long[] { long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue };
 
             //raw storage
             s[0] = (long)Math.Ceiling(Math.Log(num.Max() - num.Min(), 2)) * num.Count();
+
             //delta
             int[] d = diff(num);
-           // int[] dd = diff_all(num).ToArray();
-            s[1] = (long)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + (long)Math.Ceiling(Math.Log(Math.Abs( d.Min()),2));
+            // int[] dd = diff_all(num).ToArray();
+            s[1] = (long)Math.Ceiling(Math.Log(d.Max() - d.Min(), 2)) * (num.Count() - 1) + (long)Math.Ceiling(Math.Log(Math.Abs(d.Min()), 2));
             //create regression model
             IEnumerable<int> CL = LinearReg.CalcError(num);
 
@@ -217,8 +218,8 @@ namespace Modeler
                 data = data.OrderBy(a => a);
                 s[4] = getSorage(data, l4, level - 1) + t;
             }
-            if(choics!=null)
-            s[5] = huffman(num);
+            if (choics != null)
+                s[5] = huffman(num);
 
             int minpos = 0;
             long min = s[minpos];
@@ -229,6 +230,15 @@ namespace Modeler
                     min = s[i];
                     minpos = i;
                 }
+            }
+            if (minpos == 3 || minpos == 4)
+            {
+                Console.WriteLine("getstorage\t"+"level\t"+level+"\t#"+num.Count() + "\tdir" + (min - t) + "\t" + "size" + t);
+            }
+            else
+            {
+                Console.WriteLine("getstorage\t" + "level\t" + level + "\t#" + num.Count() + "\tsize" + (min) );
+
             }
             if (choics != null)
             {
@@ -248,8 +258,8 @@ namespace Modeler
             {
                 ArrayList choics = new ArrayList();
 
-                long size=getSorage(Array.ConvertAll(d, x => (int)x/1), choics, i);
-                Console.WriteLine(i + " " + size+ " "+size*1.0/d.Count());
+                long size = getSorage(Array.ConvertAll(d, x => (int)x /64), choics, i);
+                Console.WriteLine(i + " " + size + " " + size * 1.0 / d.Count());
                 foreach (int x in choics) { Console.Write(x + ":"); }
                 Console.WriteLine();
             }
@@ -270,7 +280,7 @@ namespace Modeler
             12,
             13,
             14,15,16}
-               
+
 
         );
 
