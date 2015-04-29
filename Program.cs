@@ -180,7 +180,7 @@ namespace Modeler
             long s = h.Size() - h.Root.Frequency;
             //estimate the direcoty size
 
-            long dir = getSorage(num.Distinct(), null
+            long dir = getStorage(num.Distinct(), null
                 , 0);
 
             //(h.Frequencies.Count()*(int)Math.Ceiling(Math.Log(num.Max()-num.Min(),2)));
@@ -188,7 +188,7 @@ namespace Modeler
             return s + dir;
 
         }
-        static long getSorage(IEnumerable<int> num, ArrayList choics, int level)
+        static long getStorage(IEnumerable<int> num, ArrayList choics, int level)
         {
             ArrayList l3 = new ArrayList();
             ArrayList l4 = new ArrayList();
@@ -207,16 +207,16 @@ namespace Modeler
             IEnumerable<int> CL = LinearReg.CalcError(num);
 
             if (CL.Count() != 0)
-                s[2] = sizeof(double) * 2 * 8 + getSorage(CL, choics, level - 1);
+                s[2] = sizeof(double) * 2 * 8 + getStorage(CL, choics, level - 1);
 
             //dictionary
             IEnumerable<int> data = num.Distinct();
             long t = num.Count() * (long)Math.Ceiling(Math.Log(data.Count(), 2));
             if (level >= 1)
             {
-                s[3] = getSorage(data, l3, level - 1) + t;
+                s[3] = getStorage(data, l3, level - 1) + t;
                 data = data.OrderBy(a => a);
-                s[4] = getSorage(data, l4, level - 1) + t;
+                s[4] = getStorage(data, l4, level - 1) + t;
             }
             if (choics != null)
                 s[5] = huffman(num);
@@ -258,7 +258,7 @@ namespace Modeler
             {
                 ArrayList choics = new ArrayList();
 
-                long size = getSorage(Array.ConvertAll(d, x => (int)x /64), choics, i);
+                long size = getStorage(Array.ConvertAll(d, x => (int)x /64), choics, i);
                 Console.WriteLine(i + " " + size + " " + size * 1.0 / d.Count());
                 foreach (int x in choics) { Console.Write(x + ":"); }
                 Console.WriteLine();
